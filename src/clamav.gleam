@@ -23,8 +23,13 @@ pub type InfectedFile {
 
 pub type ClamError {
   ScanError(error: String)
-  CannotParseResponse(raw_response: String)
+  CannotParseResponse(ClamResponseParsingError)
   ConnectionError(error: mug.Error)
+}
+
+pub type ClamResponseParsingError {
+  UnexpectedResponse(raw_response: String)
+  InvalidBinaryData
 }
 
 // ------------- PING --------------- //
@@ -44,11 +49,53 @@ pub fn ping(options: ClamAvClientOptions) -> Result(Nil, ClamError) {
       let response_text = bits |> bit_array.to_string()
       case response_text {
         Ok("PONG") -> Ok(Nil)
-        Ok(text) -> Error(CannotParseResponse(text))
-        _ -> Error(CannotParseResponse("UNKNOWN"))
+        Ok(text) -> Error(CannotParseResponse(UnexpectedResponse(text)))
+        _ -> Error(CannotParseResponse(InvalidBinaryData))
       }
     }
     Error(error) -> Error(error)
+  }
+}
+
+// ------------- VERSION --------------- //
+pub type ClamVersionResponse {
+  ClamVersionResponse(version: String, database_version: String)
+}
+
+pub fn version(
+  options: ClamAvClientOptions,
+) -> Result(ClamVersionResponse, ClamError) {
+  let res =
+    {
+      use socket <- internal.execute_command(options, "VERSION")
+      use res <- tcp.receive_bytes(socket, options)
+      Ok(res)
+    }
+    |> result.try_recover(with: fn(e) { Error(ConnectionError(e)) })
+
+  case res {
+    Ok(bits) -> {
+      let response_text = bits |> bit_array.to_string()
+      case response_text {
+        Ok(text) -> parse_version_response(text)
+        _ -> Error(CannotParseResponse(InvalidBinaryData))
+      }
+    }
+    Error(error) -> Error(error)
+  }
+}
+
+fn parse_version_response(
+  response_text: String,
+) -> Result(ClamVersionResponse, ClamError) {
+  let split = response_text |> string.split("/")
+  case split {
+    [version, database_version, ..] ->
+      Ok(ClamVersionResponse(
+        version: version |> string.trim(),
+        database_version: database_version |> string.trim(),
+      ))
+    _ -> Error(CannotParseResponse(UnexpectedResponse(response_text)))
   }
 }
 
@@ -72,7 +119,7 @@ pub fn instream(
           Ok(scan_result)
         }
         Error(_) -> {
-          Error(CannotParseResponse("<invalid binary response>"))
+          Error(CannotParseResponse(InvalidBinaryData))
         }
       }
     }
@@ -155,7 +202,7 @@ fn parse_scan_result(
               callback(virus_detected)
             }
             False -> {
-              Error(CannotParseResponse(response))
+              Error(CannotParseResponse(UnexpectedResponse(response)))
             }
           }
         }
