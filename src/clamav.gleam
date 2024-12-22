@@ -32,17 +32,25 @@ pub type ClamResponseParsingError {
   InvalidBinaryData
 }
 
+// ------------- COMMON --------------- //
+
+fn execute_adhoc_command(
+  options: ClamAvClientOptions,
+  command: String,
+) -> Result(BitArray, ClamError) {
+  {
+    use socket <- internal.execute_command(options, command)
+    use res <- tcp.receive_bytes(socket, options)
+    Ok(res)
+  }
+  |> result.try_recover(with: fn(e) { Error(ConnectionError(e)) })
+}
+
 // ------------- PING --------------- //
 
 /// Send a PING command to the ClamAV server
 pub fn ping(options: ClamAvClientOptions) -> Result(Nil, ClamError) {
-  let res =
-    {
-      use socket <- internal.execute_command(options, "PING")
-      use res <- tcp.receive_bytes(socket, options)
-      Ok(res)
-    }
-    |> result.try_recover(with: fn(e) { Error(ConnectionError(e)) })
+  let res = execute_adhoc_command(options, "PING")
 
   case res {
     Ok(bits) -> {
@@ -65,13 +73,7 @@ pub type ClamVersionResponse {
 pub fn version(
   options: ClamAvClientOptions,
 ) -> Result(ClamVersionResponse, ClamError) {
-  let res =
-    {
-      use socket <- internal.execute_command(options, "VERSION")
-      use res <- tcp.receive_bytes(socket, options)
-      Ok(res)
-    }
-    |> result.try_recover(with: fn(e) { Error(ConnectionError(e)) })
+  let res = execute_adhoc_command(options, "VERSION")
 
   case res {
     Ok(bits) -> {
@@ -85,12 +87,27 @@ pub fn version(
   }
 }
 
+// ------------- STATS --------------- //
+pub fn stats(options: ClamAvClientOptions) -> Result(String, ClamError) {
+  let res = execute_adhoc_command(options, "STATS")
+
+  case res {
+    Ok(bits) ->
+      case bits |> bit_array.to_string() {
+        Ok(text) -> Ok(text)
+        _ -> Error(CannotParseResponse(InvalidBinaryData))
+      }
+    Error(error) -> Error(error)
+  }
+}
+
 fn parse_version_response(
   response_text: String,
 ) -> Result(ClamVersionResponse, ClamError) {
   let split = response_text |> string.split("/")
+
   case split {
-    [version, database_version, ..] ->
+    [version, database_version, _date] ->
       Ok(ClamVersionResponse(
         version: version |> string.trim(),
         database_version: database_version |> string.trim(),
