@@ -17,7 +17,8 @@ jobs:
           otp-version: "27.1.2"
           gleam-version: "1.6.2"
           rebar3-version: "3"
-      - run: docker-compose up
+      - run: docker pull clamav/clamav:latest
+      - run: docker run -d -p 3310:3310 -p 3310:3310 clamav/clamav:latest
       - run: gleam deps download
       - run: gleam test
       - run: gleam format --check src test
