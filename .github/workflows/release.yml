@@ -14,7 +14,8 @@ jobs:
       with:
         otp-version: "27.1.2"
         gleam-version: "1.6.2"
-    - run: |
+    - name: Run gleam tests
+      run: |
         docker pull clamav/clamav:latest
         CONTAINERID=$(docker run -d -p 3310:3310 -p 3310:3310/udp clamav/clamav:latest)
 
@@ -22,10 +23,10 @@ jobs:
     
         LOGS=""
         while [[ $LOGS != *"socket found, clamd started"* ]]
-        do
-        echo "Waiting for ClamAV to start..."
-        LOGS=$(docker logs -n 5 $CONTAINERID)
-        sleep 5
+            do
+            echo "Waiting for ClamAV to start..."
+            LOGS=$(docker logs -n 5 $CONTAINERID)
+            sleep 5
         done
 
         echo "ClamAV started successfully."
@@ -44,11 +45,9 @@ jobs:
         with:
           otp-version: "27.1.2"
           gleam-version: "1.6.2"
-      - name: Build
+      - name: Publish release to Hex
         shell: pwsh
         run: |
-            gleam build
-
             gleam export package-interface --out package_interface.json
             $package_json = Get-Content ./package_interface.json | Out-String | ConvertFrom-Json
             $version = $package_json.version
