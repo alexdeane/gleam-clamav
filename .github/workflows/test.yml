@@ -22,9 +22,11 @@ jobs:
           CONTAINERID=$(docker run -d -p 3310:3310 -p 3310:3310/udp clamav/clamav:latest)
 
           echo ${CONTAINERID}
-
-          while ! grep -q "socket found, clamd started" $(docker logs -n 5 ${CONTAINERID}); do
+          
+          LOGS=""
+          while $LOGS != *"socket found, clamd started"* do
             echo "Waiting for ClamAV to start..."
+            LOGS=$(docker logs -n 5 ${CONTAINERID})
             sleep 5
           done
 
