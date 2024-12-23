@@ -23,7 +23,7 @@ jobs:
 
           while ! grep -q "socket found, clamd started" docker_run.log; do
             echo "Waiting for ClamAV to start..."
-            sleep 100
+            sleep 5
           done
 
           echo "ClamAV started successfully."
