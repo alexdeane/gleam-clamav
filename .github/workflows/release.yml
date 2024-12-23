@@ -14,9 +14,29 @@ jobs:
         with:
           otp-version: "27.1.2"
           gleam-version: "1.6.2"
-      - run: |
+      - name: Build
+        shell: pwsh
+        run: |
             gleam build
-            gleam publish --yes
+
+            gleam export package-interface --out package_interface.json
+            $package_json = Get-Content ./package_interface.json | Out-String | ConvertFrom-Json
+            $version = $package_json.version
+
+            try {
+                $response = Invoke-RestMethod -Uri "https://hex.pm/packages/clamav_client/$version"
+                echo "Package version $version already exists on Hex. Skipping release."
+            } catch {
+                $StatusCode = $_.Exception.Response.StatusCode
+
+                if ($StatusCode -eq [System.Net.HttpStatusCode]::NotFound) {
+                    echo "Releasing package version $version to Hex"
+                    gleam publish --yes
+                } else {
+                    Write-Error "Error checking for package version on Hex."
+                    exit 1;
+                }
+            }
         env:
             HEXPM_USER: ${{ secrets.HEXPM_USER }}
             HEXPM_PASS: ${{ secrets.HEXPM_PASS }}

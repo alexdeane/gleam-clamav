@@ -2,7 +2,7 @@
 
 [![Package Version](https://img.shields.io/hexpm/v/clamav_client)](https://hex.pm/packages/clamav_client)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/clamav_client/)
-![Latest CI](https://github.com/alexdeane/gleam-clamav/actions/workflows/test.yml/badge.svg)
+[![Latest CI](https://github.com/alexdeane/gleam-clamav/actions/workflows/test.yml/badge.svg)](https://github.com/alexdeane/gleam-clamav/actions/workflows/test.yml)
 
 Gleam client for interacting with a [ClamAV](https://www.clamav.net/) instance
 
