@@ -24,7 +24,7 @@ jobs:
           echo $CONTAINERID
           
           LOGS=""
-          while [ $LOGS != *"socket found, clamd started"* ]
+          while [[ $LOGS != *"socket found, clamd started"* ]]
           do
             echo "Waiting for ClamAV to start..."
             LOGS=$(docker logs -n 5 $CONTAINERID)
