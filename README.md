@@ -11,21 +11,15 @@ gleam add clamav_client@1
 ```
 ```gleam
 import clamav_client/clamav
-import clamav_client/client_options.{type ClamAvClientOptions}
 
 pub fn main() {
   let data = "some data, probably a file" |> bit_array.from_string
 
-  let options =
-    ClamAvClientOptions(
-      host: "",
-      port: 3310,
-      connection_timeout: 10_000, // ms
-      reply_timeout: 10_000, // ms
-      logger: client_options.nil_logger
-    )
+  let clamav_options =
+    clamav.new("<host>")
+    |> clamav.port(3310)
 
-  case clamav.instream(options, data) {
+  case clamav.instream(clamav_options, data) {
     Ok(Clean) -> "Clean!"
     Ok(VirusDetected(infected_files)) -> {
       let infected_file =

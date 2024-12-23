@@ -32,6 +32,43 @@ pub type ClamResponseParsingError {
   InvalidBinaryData
 }
 
+// ------------- CONFIGURATION --------------- //
+
+/// Creates a new instance of the client options
+/// given a host, with default values for the rest
+pub fn new(host: String) {
+  client_options.ClamAvClientOptions(
+    host: host,
+    port: 3310,
+    connection_timeout: 10_000,
+    reply_timeout: 10_000,
+    logger: client_options.nil_logger,
+  )
+}
+
+/// Configures the port for the client to use. Defaults to 3310
+pub fn port(client: ClamAvClientOptions, port: Int) {
+  client_options.ClamAvClientOptions(..client, port: port)
+}
+
+/// Configures the total connection timeout for the client to use. Defaults to 10s
+pub fn connection_timeout(client: ClamAvClientOptions, connection_timeout: Int) {
+  client_options.ClamAvClientOptions(
+    ..client,
+    connection_timeout: connection_timeout,
+  )
+}
+
+/// Configures the timeout for awaiting a reply from the clam server. Defaults to 10s
+pub fn reply_timeout(client: ClamAvClientOptions, reply_timeout: Int) {
+  client_options.ClamAvClientOptions(..client, reply_timeout: reply_timeout)
+}
+
+/// Configures a logger for the client to use. Defaults to a nil logger
+pub fn logger(client: ClamAvClientOptions, logger: Logger) {
+  client_options.ClamAvClientOptions(..client, logger: logger)
+}
+
 // ------------- COMMON --------------- //
 
 fn execute_adhoc_command(

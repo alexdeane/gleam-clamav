@@ -12,21 +12,25 @@ pub fn main() {
 
 const eicar_string = "X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*"
 
-const options = clamavc.ClamAvClientOptions(
-  host: "localhost",
-  port: 3310,
-  connection_timeout: 1000,
-  reply_timeout: 1000,
-  logger: logger,
-)
-
 pub fn ping_test() {
-  let assert Ok(_) = clamav.ping(options)
+  let clamav_options =
+    clamav.new("localhost")
+    |> clamav.connection_timeout(1000)
+    |> clamav.reply_timeout(1000)
+    |> clamav.logger(logger)
+
+  let assert Ok(_) = clamav.ping(clamav_options)
 }
 
 pub fn instream_test() {
+  let clamav_options =
+    clamav.new("localhost")
+    |> clamav.connection_timeout(1000)
+    |> clamav.reply_timeout(1000)
+    |> clamav.logger(logger)
+
   let assert Ok(VirusDetected([infected_file, ..])) =
-    clamav.instream(options, eicar_string |> bit_array.from_string)
+    clamav.instream(clamav_options, eicar_string |> bit_array.from_string)
 
   should.be_true(infected_file.file_name |> string.length > 0)
   should.equal(infected_file.virus_name, "Win.Test.EICAR_HDB-1")
