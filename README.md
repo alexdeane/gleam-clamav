@@ -39,10 +39,3 @@ pub fn main() {
 ```
 
 Further documentation can be found at <https://hexdocs.pm/clamav_client>.
-
-## Development
-
-```sh
-gleam build  # Build the project
-gleam test   # Run the tests
-```
