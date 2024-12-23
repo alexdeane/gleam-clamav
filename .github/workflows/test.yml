@@ -19,9 +19,11 @@ jobs:
           rebar3-version: "3"
       - run: |
           docker pull clamav/clamav:latest | tee docker_pull.log
-          docker run -d -p 3310:3310 -p 3310:3310/udp clamav/clamav:latest | tee docker_run.log &
+          $container_id=docker run -d -p 3310:3310 -p 3310:3310/udp clamav/clamav:latest
 
-          while ! grep -q "socket found, clamd started" docker_run.log; do
+          echo $container_id
+
+          while ! grep -q "socket found, clamd started" $(docker logs -n 5 $container_id); do
             echo "Waiting for ClamAV to start..."
             sleep 5
           done
