@@ -1,5 +1,5 @@
 name = "clamav_client"
-licences = ["GNU General Public License v3.0"]
+licences = ["GPL-3.0-only"]
 description = "ClamAV client implementation in pure Gleam"
 
 version = "1.0.0"
